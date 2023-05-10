@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, send_file
 from firebase_admin import storage, db
 from datetime import datetime, timedelta
+from flask import url_for
 from ultralytics import YOLO
 import cv2
 import os
@@ -29,6 +30,7 @@ def upload_image_and_create_item():
         else:
             conf_smoke = 0
         if (conf_fire > 0.8) or (conf_smoke > 0.5 and conf_fire > 0.5):
+
         # Tải ảnh lên Firebase Storage
             image_data = image.read()
             image_name = "Fire_Detection/" + image.filename
