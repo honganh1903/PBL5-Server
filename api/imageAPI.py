@@ -1,35 +1,23 @@
 from flask import Blueprint, request, jsonify, send_file
 from firebase_admin import storage, db
 from datetime import datetime, timedelta
+from flask import url_for
+from werkzeug.utils import secure_filename
 from ultralytics import YOLO
+import os
 
 imageAPI = Blueprint('imageAPI', __name__)
 
-model = YOLO('D:/PBL5/Model/best.pt')
+# model = YOLO('D:/PBL5/Model/best.pt')
+model = YOLO('yolov8n.pt')
 
 @imageAPI.route('/', methods=['POST'])
-# def upload_image():
-#     image = request.files['image']
-#     image_data = image.read()
-#     image_name = "Fire_Detection/" + image.filename
-#     image_content_type = image.content_type
-#
-#     bucket = storage.bucket()
-#     blob = bucket.blob(image_name)
-#     blob.upload_from_string(image_data, content_type=image_content_type)
-#     url = blob.generate_signed_url(
-#         version='v4',
-#         expiration=datetime.timedelta(minutes=15),
-#         method='GET'
-#     )
-#
-#
-#     # Trả về link của ảnh
-#     return jsonify({'url': url})
 def upload_image_and_create_item():
     # Lấy file ảnh từ form data
     image = request.files['image']
-    results = model.predict(source = image)
+    image_path = os.path.join('images', image.filename)
+    image.save(image_path)
+    results = model.predict(source = image_path)
     if results[0].boxes.conf[results[0].boxes.cls == 0].item() > 0.7:
         print(results[0].boxes.cls)
         # Tải ảnh lên Firebase Storage
