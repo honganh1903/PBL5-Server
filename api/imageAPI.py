@@ -8,14 +8,16 @@ import os
 from werkzeug.utils import secure_filename
 imageAPI = Blueprint('imageAPI', __name__)
 
-model = YOLO('D:/PBL5/Model/best_3.pt')
+model = YOLO('yolov8n.pt')
 
 @imageAPI.route('/', methods=['POST'])
 def upload_image_and_create_item():
     # Lấy file ảnh từ form data
     image = request.files['image']
     filename = secure_filename(image.filename)
-    filename = os.path.join('D:/PBL5/PBL5-Server/api', filename)
+    filename = os.path.join('images', filename)
+    image_data = image.read()
+    image.seek(0)
     image.save(filename)
     results = model.predict(source = filename,save = True)
     if len(results[0].boxes) > 0:
@@ -32,7 +34,6 @@ def upload_image_and_create_item():
         if (conf_fire > 0.8) or (conf_smoke > 0.5 and conf_fire > 0.5):
 
         # Tải ảnh lên Firebase Storage
-            image_data = image.read()
             image_name = "Fire_Detection/" + image.filename
             image_content_type = image.content_type
             bucket = storage.bucket()
@@ -54,7 +55,7 @@ def upload_image_and_create_item():
             new_item_ref = ref.push()
             new_item_ref.set(item)
             return jsonify({'message': 'Fire', 'item_id': new_item_ref.key})
-    os.remove(filename)
+    # os.remove(filename)
     return jsonify({'message': 'Non Fire'})
 
 @imageAPI.route('/<image_name>', methods=['GET'])
